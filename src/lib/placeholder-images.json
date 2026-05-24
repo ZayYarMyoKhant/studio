@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "grocery",
+      "description": "Fresh vegetables and groceries",
+      "imageUrl": "https://picsum.photos/seed/grocery/800/600",
+      "imageHint": "grocery food"
+    },
+    {
+      "id": "packing",
+      "description": "Travel essentials and luggage",
+      "imageUrl": "https://picsum.photos/seed/travel/800/600",
+      "imageHint": "travel luggage"
+    },
+    {
+      "id": "office",
+      "description": "Office supplies and desk",
+      "imageUrl": "https://picsum.photos/seed/work/800/600",
+      "imageHint": "office workspace"
+    }
+  ]
 }
