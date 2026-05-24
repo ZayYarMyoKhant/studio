@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import { BottomNav } from '@/components/BottomNav';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'စာရင်း',
@@ -18,7 +20,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body antialiased bg-background">
+        <div className="pb-20 min-h-screen">
+          {children}
+        </div>
+        <BottomNav />
+        <Toaster />
+      </body>
     </html>
   );
 }

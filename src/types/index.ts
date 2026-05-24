@@ -16,6 +16,16 @@ export interface List {
   createdAt: number;
 }
 
+export interface Debt {
+  id: string;
+  personName: string;
+  amount: number;
+  type: 'owe' | 'lent'; // 'owe' = we owe them, 'lent' = they owe us
+  note: string;
+  date: number;
+  completed: boolean;
+}
+
 export const CATEGORIES = [
   { name: 'Shopping', color: '#4560A1' },
   { name: 'Travel', color: '#298BA3' },
