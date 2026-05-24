@@ -65,7 +65,7 @@ export default function Dashboard() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-2xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-primary">SarinEase</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">စာရင်း</h1>
             <div className="flex items-center gap-2">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
