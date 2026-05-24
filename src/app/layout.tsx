@@ -1,7 +1,9 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'စာရင်း',
@@ -21,11 +23,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background">
-        <div className="pb-20 min-h-screen">
-          {children}
-        </div>
-        <BottomNav />
-        <Toaster />
+        <FirebaseClientProvider>
+          <div className="pb-20 min-h-screen">
+            {children}
+          </div>
+          <BottomNav />
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );

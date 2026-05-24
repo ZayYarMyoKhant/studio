@@ -1,0 +1,64 @@
+
+{
+  "entities": {
+    "ListItem": {
+      "title": "ListItem",
+      "description": "An item within a list.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "string" },
+        "description": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "completed", "createdAt"]
+    },
+    "List": {
+      "title": "List",
+      "description": "A collection of items.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "color": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/entities/ListItem" }
+        },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "title", "category", "createdAt"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "A debt record (lent or owe).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "personName": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["owe", "lent"] },
+        "note": { "type": "string" },
+        "date": { "type": "number" },
+        "completed": { "type": "boolean" }
+      },
+      "required": ["id", "personName", "amount", "type", "date", "completed"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/users/{userId}/lists/{listId}": {
+      "schema": "List",
+      "description": "User's individual lists."
+    },
+    "/users/{userId}/debts/{debtId}": {
+      "schema": "Debt",
+      "description": "User's debt records."
+    }
+  }
+}
