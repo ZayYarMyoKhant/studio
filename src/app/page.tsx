@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useState } from "react"
-import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -21,22 +21,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useCollection, useUser, useFirestore } from "@/firebase"
+import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore"
 import { List, CATEGORIES, Debt } from "@/types"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { errorEmitter } from '@/firebase/error-emitter'
+import { FirestorePermissionError } from '@/firebase/errors'
 
 export default function AppMainPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "debts">("summary")
-  
-  // Lists State
-  const [lists, setLists, listsHydrated] = useLocalStorage<List[]>("sarinease_lists", [])
+  const { user, loading: authLoading } = useUser()
+  const db = useFirestore()
+  const userId = user?.uid || "anonymous"
+
+  // Firestore Lists
+  const listsRef = useMemo(() => collection(db, "users", userId, "lists"), [db, userId])
+  const listsQuery = useMemo(() => query(listsRef, orderBy("createdAt", "desc")), [listsRef])
+  const { data: lists, loading: listsLoading } = useCollection<List>(listsQuery)
+
+  // Firestore Debts
+  const debtsRef = useMemo(() => collection(db, "users", userId, "debts"), [db, userId])
+  const debtsQuery = useMemo(() => query(debtsRef, orderBy("date", "desc")), [debtsRef])
+  const { data: debts, loading: debtsLoading } = useCollection<Debt>(debtsQuery)
+
   const [newListTitle, setNewListTitle] = useState("")
   const [newListCategory, setNewListCategory] = useState(CATEGORIES[0].name)
   const [isListDialogOpen, setIsListDialogOpen] = useState(false)
 
-  // Debts State
-  const [debts, setDebts, debtsHydrated] = useLocalStorage<Debt[]>("sarinease_debts", [])
   const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false)
   const [debtName, setDebtName] = useState("")
   const [debtAmount, setDebtAmount] = useState("")
@@ -47,15 +59,25 @@ export default function AppMainPage() {
   const handleCreateList = () => {
     if (!newListTitle.trim()) return
     const selectedCategory = CATEGORIES.find(c => c.name === newListCategory) || CATEGORIES[0]
+    const newListId = Math.random().toString(36).substr(2, 9)
     const newList: List = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: newListId,
       title: newListTitle,
       category: newListCategory,
       color: selectedCategory.color,
       items: [],
       createdAt: Date.now(),
     }
-    setLists([newList, ...lists])
+
+    const docRef = doc(db, "users", userId, "lists", newListId)
+    setDoc(docRef, newList).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'create',
+        requestResourceData: newList
+      }))
+    })
+
     setNewListTitle("")
     setIsListDialogOpen(false)
   }
@@ -63,8 +85,9 @@ export default function AppMainPage() {
   // Debt Handlers
   const handleAddDebt = () => {
     if (!debtName || !debtAmount) return
+    const newDebtId = Math.random().toString(36).substr(2, 9)
     const newDebt: Debt = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: newDebtId,
       personName: debtName,
       amount: parseFloat(debtAmount),
       type: debtType,
@@ -72,7 +95,16 @@ export default function AppMainPage() {
       date: Date.now(),
       completed: false,
     }
-    setDebts([newDebt, ...debts])
+
+    const docRef = doc(db, "users", userId, "debts", newDebtId)
+    setDoc(docRef, newDebt).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'create',
+        requestResourceData: newDebt
+      }))
+    })
+
     setDebtName("")
     setDebtAmount("")
     setDebtNote("")
@@ -80,18 +112,30 @@ export default function AppMainPage() {
   }
 
   const deleteDebt = (id: string) => {
-    setDebts(debts.filter(d => d.id !== id))
+    const docRef = doc(db, "users", userId, "debts", id)
+    deleteDoc(docRef).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'delete'
+      }))
+    })
   }
 
-  const totalToReceive = debts
-    .filter(d => d.type === 'lent' && !d.completed)
-    .reduce((acc, curr) => acc + curr.amount, 0)
+  const totalToReceive = useMemo(() => 
+    (debts || []).filter(d => d.type === 'lent' && !d.completed).reduce((acc, curr) => acc + curr.amount, 0),
+    [debts]
+  )
 
-  const totalToPay = debts
-    .filter(d => d.type === 'owe' && !d.completed)
-    .reduce((acc, curr) => acc + curr.amount, 0)
+  const totalToPay = useMemo(() => 
+    (debts || []).filter(d => d.type === 'owe' && !d.completed).reduce((acc, curr) => acc + curr.amount, 0),
+    [debts]
+  )
 
-  if (!listsHydrated || !debtsHydrated) return null
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,7 +252,9 @@ export default function AppMainPage() {
       <main className="max-w-2xl mx-auto px-4 py-8 mb-20">
         {activeTab === "summary" ? (
           <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {lists.length > 0 ? (
+            {listsLoading ? (
+               <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
+            ) : lists && lists.length > 0 ? (
               lists.map((list) => (
                 <Link key={list.id} href={`/list/${list.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer group border-none shadow-sm">
@@ -228,7 +274,7 @@ export default function AppMainPage() {
                             <Tag className="h-3 w-3" />
                             {list.category}
                             <span className="mx-1">•</span>
-                            {list.items.length} ခု
+                            {list.items?.length || 0} ခု
                           </CardDescription>
                         </div>
                       </div>
@@ -272,7 +318,9 @@ export default function AppMainPage() {
 
             {/* Debt List */}
             <div className="space-y-3">
-              {debts.length > 0 ? (
+              {debtsLoading ? (
+                 <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
+              ) : debts && debts.length > 0 ? (
                 debts.map((debt) => (
                   <div
                     key={debt.id}

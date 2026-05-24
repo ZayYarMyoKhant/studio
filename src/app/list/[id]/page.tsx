@@ -1,29 +1,41 @@
+
 "use client"
 
-import { useState, use } from "react"
+import { useState, use, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, CheckCircle2, Circle, Trash2, Edit2, Sparkles, ChevronLeft } from "lucide-react"
+import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useUser, useFirestore, useDoc } from "@/firebase"
+import { doc, updateDoc } from "firebase/firestore"
 import { List, ListItem } from "@/types"
 import { useToast } from "@/hooks/use-toast"
 import { SmartItemSuggestion } from "@/components/SmartItemSuggestion"
 import { cn } from "@/lib/utils"
+import { errorEmitter } from '@/firebase/error-emitter'
+import { FirestorePermissionError } from '@/firebase/errors'
 
 export default function ListDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { id } = use(params)
   const { toast } = useToast()
-  
-  const [lists, setLists] = useLocalStorage<List[]>("sarinease_lists", [])
-  const list = lists.find(l => l.id === id)
+  const { user } = useUser()
+  const db = useFirestore()
+  const userId = user?.uid || "anonymous"
+
+  const listRef = useMemo(() => doc(db, "users", userId, "lists", id), [db, userId, id])
+  const { data: list, loading } = useDoc<List>(listRef)
 
   const [newItemName, setNewItemName] = useState("")
   const [newItemQty, setNewItemQty] = useState("")
   const [newItemDesc, setNewItemDesc] = useState("")
   const [isAdding, setIsAdding] = useState(false)
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
 
   if (!list) return <div className="p-8 text-center">List not found.</div>
 
@@ -39,10 +51,14 @@ export default function ListDetailPage({ params }: { params: Promise<{ id: strin
       createdAt: Date.now(),
     }
 
-    const updatedLists = lists.map(l => 
-      l.id === id ? { ...l, items: [newItem, ...l.items] } : l
-    )
-    setLists(updatedLists)
+    const updatedItems = [newItem, ...(list.items || [])]
+    updateDoc(listRef, { items: updatedItems }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: listRef.path,
+        operation: 'update',
+        requestResourceData: { items: updatedItems }
+      }))
+    })
     
     setNewItemName("")
     setNewItemQty("")
@@ -56,23 +72,23 @@ export default function ListDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const toggleItem = (itemId: string) => {
-    const updatedLists = lists.map(l => 
-      l.id === id ? {
-        ...l,
-        items: l.items.map(i => i.id === itemId ? { ...i, completed: !i.completed } : i)
-      } : l
-    )
-    setLists(updatedLists)
+    const updatedItems = list.items.map(i => i.id === itemId ? { ...i, completed: !i.completed } : i)
+    updateDoc(listRef, { items: updatedItems }).catch(async () => {
+       errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: listRef.path,
+        operation: 'update'
+      }))
+    })
   }
 
   const deleteItem = (itemId: string) => {
-    const updatedLists = lists.map(l => 
-      l.id === id ? {
-        ...l,
-        items: l.items.filter(i => i.id !== itemId)
-      } : l
-    )
-    setLists(updatedLists)
+    const updatedItems = list.items.filter(i => i.id !== itemId)
+    updateDoc(listRef, { items: updatedItems }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: listRef.path,
+        operation: 'update'
+      }))
+    })
   }
 
   return (
@@ -161,7 +177,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* List Items */}
         <div className="space-y-3">
-          {list.items.length > 0 ? (
+          {list.items && list.items.length > 0 ? (
             list.items.map((item) => (
               <div
                 key={item.id}
