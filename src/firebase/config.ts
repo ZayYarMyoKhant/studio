@@ -1,4 +1,5 @@
 
+// အောက်ပါအချက်အလက်များကို Firebase Console (Project Settings) မှ ရယူပြီး အစားထိုးထည့်သွင်းပေးပါ
 export const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",

@@ -2,10 +2,10 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2, Calendar as CalendarIcon } from "lucide-react"
+import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2, Calendar as CalendarIcon, CheckCircle2, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -251,12 +251,12 @@ export default function AppMainPage() {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal h-10 px-3",
                             !debtDate && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {debtDate ? format(debtDate, "PPP") : <span>ရက်စွဲရွေးပါ</span>}
+                          {debtDate ? format(debtDate, "dd MMM yyyy") : <span>ရက်စွဲရွေးပါ</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -270,7 +270,7 @@ export default function AppMainPage() {
                     </Popover>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">မှတ်ချက် (မဖြစ်မနေမဟုတ်ပါ)</label>
+                    <label className="text-sm font-medium text-muted-foreground">မှတ်ချက်</label>
                     <Input
                       placeholder="မှတ်ချက်..."
                       value={debtNote}
@@ -292,13 +292,13 @@ export default function AppMainPage() {
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-8 mb-20">
         {activeTab === "summary" ? (
-          <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="grid gap-4">
             {listsLoading ? (
                <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
             ) : lists && lists.length > 0 ? (
               lists.map((list) => (
                 <Link key={list.id} href={`/list/${list.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer group border-none shadow-sm">
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer group border-none shadow-sm overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
                       <div className="flex items-center gap-4">
                         <div
@@ -308,10 +308,10 @@ export default function AppMainPage() {
                           <ListTodo className="h-5 w-5" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
+                          <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">
                             {list.title}
                           </CardTitle>
-                          <CardDescription className="flex items-center gap-2 mt-1">
+                          <CardDescription className="flex items-center gap-2 mt-0.5">
                             <Tag className="h-3 w-3" />
                             {list.category}
                             <span className="mx-1">•</span>
@@ -319,9 +319,7 @@ export default function AppMainPage() {
                           </CardDescription>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                   </Card>
                 </Link>
@@ -336,94 +334,95 @@ export default function AppMainPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* Debt List */}
-            <div className="grid grid-cols-1 gap-3">
-              {debtsLoading ? (
-                 <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
-              ) : debts && debts.length > 0 ? (
-                debts.map((debt) => (
-                  <div
-                    key={debt.id}
-                    onClick={() => toggleDebtCompletion(debt.id, debt.completed)}
-                    className={cn(
-                      "group relative flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border transition-all cursor-pointer hover:ring-2 hover:ring-primary/20",
-                      debt.completed && "opacity-50 grayscale"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                        debt.type === 'lent' ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+          <div className="grid grid-cols-1 gap-3">
+            {debtsLoading ? (
+               <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
+            ) : debts && debts.length > 0 ? (
+              debts.map((debt) => (
+                <div
+                  key={debt.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-transparent hover:border-primary/20 transition-all",
+                    debt.completed && "opacity-60"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => toggleDebtCompletion(debt.id, debt.completed)}
+                      className="shrink-0"
+                    >
+                      {debt.completed ? (
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </button>
+                    <div className="overflow-hidden">
+                      <h3 className={cn("font-bold text-base leading-tight truncate", debt.completed && "line-through text-muted-foreground")}>
+                        {debt.personName}
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                        <CalendarIcon className="h-3 w-3" />
+                        {format(new Date(debt.date), "dd MMM yyyy")}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <p className={cn(
+                        "font-bold text-lg leading-none", 
+                        debt.type === 'lent' ? "text-emerald-600" : "text-rose-600"
                       )}>
-                        {debt.type === 'lent' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
-                      </div>
-                      <div className="overflow-hidden">
-                        <h3 className="font-bold truncate text-foreground">{debt.personName}</h3>
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <CalendarIcon className="h-3 w-3" />
-                          {format(new Date(debt.date), "dd MMM yyyy")}
-                        </p>
-                      </div>
+                        {debt.amount.toLocaleString()}
+                      </p>
+                      <p className="text-[10px] font-bold text-muted-foreground mt-0.5 uppercase tracking-tighter">ကျပ်</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right mr-2">
-                        <p className={cn("font-bold text-lg leading-tight", debt.type === 'lent' ? "text-emerald-700" : "text-rose-700")}>
-                          {debt.amount.toLocaleString()}
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">ကျပ်</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteDebt(debt.id);
-                        }} 
-                        className="text-muted-foreground hover:text-destructive transition-colors h-9 w-9"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => deleteDebt(debt.id)} 
+                      className="text-muted-foreground hover:text-destructive h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-20">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
-                    <HandCoins className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-lg font-medium">အကြွေးစာရင်းမရှိသေးပါ</h3>
-                  <p className="text-sm text-muted-foreground">မှတ်တမ်းတင်ရန် "အသစ်ထည့်" ကိုနှိပ်ပါ။</p>
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
+                  <HandCoins className="h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-medium">အကြွေးစာရင်းမရှိသေးပါ</h3>
+                <p className="text-sm text-muted-foreground">မှတ်တမ်းတင်ရန် "အသစ်ထည့်" ကိုနှိပ်ပါ။</p>
+              </div>
+            )}
           </div>
         )}
       </main>
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border flex justify-around items-center h-16 px-4 max-w-2xl mx-auto shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border flex justify-around items-center h-16 px-4 max-w-2xl mx-auto">
         <button
           onClick={() => setActiveTab("summary")}
           className={cn(
-            "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
-            activeTab === "summary" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
+            activeTab === "summary" ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <LayoutDashboard className={cn("h-6 w-6", activeTab === "summary" && "fill-primary/10")} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">စာရင်းချုပ်</span>
-          {activeTab === "summary" && <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />}
+          <LayoutDashboard className="h-6 w-6" />
+          <span className="text-[10px] font-bold">စာရင်းချုပ်</span>
         </button>
         <button
           onClick={() => setActiveTab("debts")}
           className={cn(
-            "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
-            activeTab === "debts" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
+            activeTab === "debts" ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <HandCoins className={cn("h-6 w-6", activeTab === "debts" && "fill-primary/10")} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">အကြွေးစာရင်း</span>
-          {activeTab === "debts" && <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />}
+          <HandCoins className="h-6 w-6" />
+          <span className="text-[10px] font-bold">အကြွေးစာရင်း</span>
         </button>
       </nav>
     </div>
