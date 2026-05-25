@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
-import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2 } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -21,13 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 import { useCollection, useUser, useFirestore } from "@/firebase"
-import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore"
+import { collection, doc, setDoc, deleteDoc, query, orderBy, updateDoc } from "firebase/firestore"
 import { List, CATEGORIES, Debt } from "@/types"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
+import { format } from "date-fns"
 
 export default function AppMainPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "debts">("summary")
@@ -54,6 +61,7 @@ export default function AppMainPage() {
   const [debtAmount, setDebtAmount] = useState("")
   const [debtType, setDebtType] = useState<"owe" | "lent">("lent")
   const [debtNote, setDebtNote] = useState("")
+  const [debtDate, setDebtDate] = useState<Date>(new Date())
 
   // List Handlers
   const handleCreateList = () => {
@@ -92,7 +100,7 @@ export default function AppMainPage() {
       amount: parseFloat(debtAmount),
       type: debtType,
       note: debtNote,
-      date: Date.now(),
+      date: debtDate.getTime(),
       completed: false,
     }
 
@@ -108,6 +116,7 @@ export default function AppMainPage() {
     setDebtName("")
     setDebtAmount("")
     setDebtNote("")
+    setDebtDate(new Date())
     setIsDebtDialogOpen(false)
   }
 
@@ -117,6 +126,16 @@ export default function AppMainPage() {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
         operation: 'delete'
+      }))
+    })
+  }
+
+  const toggleDebtCompletion = (id: string, currentStatus: boolean) => {
+    const docRef = doc(db, "users", userId, "debts", id)
+    updateDoc(docRef, { completed: !currentStatus }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'update'
       }))
     })
   }
@@ -159,7 +178,7 @@ export default function AppMainPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">ခေါင်းစဉ်</label>
+                    <label className="text-sm font-medium text-muted-foreground">ခေါင်းစဉ်</label>
                     <Input
                       placeholder="ဥပမာ - ဈေးဝယ်စာရင်း"
                       value={newListTitle}
@@ -167,7 +186,7 @@ export default function AppMainPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">အမျိုးအစား</label>
+                    <label className="text-sm font-medium text-muted-foreground">အမျိုးအစား</label>
                     <Select value={newListCategory} onValueChange={setNewListCategory}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select Category" />
@@ -201,46 +220,78 @@ export default function AppMainPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">နာမည်</label>
+                    <label className="text-sm font-medium text-muted-foreground">နာမည်</label>
                     <Input
                       placeholder="လူအမည်"
                       value={debtName}
                       onChange={(e) => setDebtName(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">ပမာဏ</label>
-                    <Input
-                      type="number"
-                      placeholder="ငွေပမာဏ"
-                      value={debtAmount}
-                      onChange={(e) => setDebtAmount(e.target.value)}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">အမျိုးအစား</label>
+                      <Select value={debtType} onValueChange={(val: any) => setDebtType(val)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="lent">ရရန်ရှိ (Lent)</SelectItem>
+                          <SelectItem value="owe">ပေးရန်ရှိ (Owe)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">ပမာဏ</label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={debtAmount}
+                          onChange={(e) => setDebtAmount(e.target.value)}
+                          className="pr-12"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">ကျပ်</span>
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">အမျိုးအစား</label>
-                    <Select value={debtType} onValueChange={(val: any) => setDebtType(val)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="lent">ရရန်ရှိ (Lent)</SelectItem>
-                        <SelectItem value="owe">ပေးရန်ရှိ (Owe)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium text-muted-foreground">ရက်စွဲ</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !debtDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {debtDate ? format(debtDate, "PPP") : <span>ရက်စွဲရွေးပါ</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={debtDate}
+                          onSelect={(date) => date && setDebtDate(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">မှတ်ချက်</label>
+                    <label className="text-sm font-medium text-muted-foreground">မှတ်ချက် (မဖြစ်မနေမဟုတ်ပါ)</label>
                     <Input
-                      placeholder="အပိုဆောင်းမှတ်ချက်"
+                      placeholder="မှတ်ချက်..."
                       value={debtNote}
                       onChange={(e) => setDebtNote(e.target.value)}
                     />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsDebtDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddDebt} className="bg-primary">သိမ်းမည်</Button>
+                <DialogFooter className="sm:justify-start">
+                  <Button onClick={handleAddDebt} className="w-full bg-primary hover:bg-primary/90 font-bold py-6 text-lg rounded-xl">
+                    မှတ်သားမည်
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -298,64 +349,78 @@ export default function AppMainPage() {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-green-50 border-green-100 shadow-none">
+              <Card className="bg-emerald-50 border-emerald-100 shadow-none rounded-2xl">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-bold text-green-700 uppercase tracking-wider">ရရန်ရှိ</CardTitle>
+                  <CardTitle className="text-xs font-bold text-emerald-700 uppercase tracking-wider">ရရန်ရှိ</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold text-green-700">{totalToReceive.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-emerald-700">{totalToReceive.toLocaleString()}</p>
+                  <p className="text-[10px] text-emerald-600/70 font-medium">စုစုပေါင်း ကျပ်</p>
                 </CardContent>
               </Card>
-              <Card className="bg-red-50 border-red-100 shadow-none">
+              <Card className="bg-rose-50 border-rose-100 shadow-none rounded-2xl">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-bold text-red-700 uppercase tracking-wider">ပေးရန်ရှိ</CardTitle>
+                  <CardTitle className="text-xs font-bold text-rose-700 uppercase tracking-wider">ပေးရန်ရှိ</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold text-red-700">{totalToPay.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-rose-700">{totalToPay.toLocaleString()}</p>
+                  <p className="text-[10px] text-rose-600/70 font-medium">စုစုပေါင်း ကျပ်</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Debt List */}
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {debtsLoading ? (
-                 <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
+                 <div className="col-span-full text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
               ) : debts && debts.length > 0 ? (
                 debts.map((debt) => (
                   <div
                     key={debt.id}
+                    onClick={() => toggleDebtCompletion(debt.id, debt.completed)}
                     className={cn(
-                      "flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border transition-all",
-                      debt.completed && "opacity-50 grayscale"
+                      "group relative flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border transition-all cursor-pointer hover:ring-2 hover:ring-primary/20",
+                      debt.completed && "opacity-50"
                     )}
                   >
                     <div className="flex items-center gap-4">
                       <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center",
-                        debt.type === 'lent' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                        debt.type === 'lent' ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
                       )}>
                         {debt.type === 'lent' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                       </div>
-                      <div>
-                        <h3 className="font-bold">{debt.personName}</h3>
-                        <p className="text-xs text-muted-foreground">{new Date(debt.date).toLocaleDateString()}</p>
+                      <div className="overflow-hidden">
+                        <h3 className="font-bold truncate text-foreground">{debt.personName}</h3>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <CalendarIcon className="h-3 w-3" />
+                          {format(new Date(debt.date), "dd MMM yyyy")}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className={cn("font-bold text-lg", debt.type === 'lent' ? "text-green-700" : "text-red-700")}>
+                        <p className={cn("font-bold text-lg leading-tight", debt.type === 'lent' ? "text-emerald-700" : "text-rose-700")}>
                           {debt.amount.toLocaleString()}
                         </p>
-                        {debt.note && <p className="text-xs text-muted-foreground">{debt.note}</p>}
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">ကျပ်</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => deleteDebt(debt.id)} className="text-destructive">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDebt(debt.id);
+                        }} 
+                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-20">
+                <div className="col-span-full text-center py-20">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
                     <HandCoins className="h-8 w-8" />
                   </div>
