@@ -1,11 +1,11 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Plus, ListTodo, Tag, MoreVertical, HandCoins, ArrowDownRight, ArrowUpRight, Trash2, LayoutDashboard, Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -139,16 +139,6 @@ export default function AppMainPage() {
       }))
     })
   }
-
-  const totalToReceive = useMemo(() => 
-    (debts || []).filter(d => d.type === 'lent' && !d.completed).reduce((acc, curr) => acc + curr.amount, 0),
-    [debts]
-  )
-
-  const totalToPay = useMemo(() => 
-    (debts || []).filter(d => d.type === 'owe' && !d.completed).reduce((acc, curr) => acc + curr.amount, 0),
-    [debts]
-  )
 
   if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -347,32 +337,10 @@ export default function AppMainPage() {
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-emerald-50 border-emerald-100 shadow-none rounded-2xl">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-bold text-emerald-700 uppercase tracking-wider">ရရန်ရှိ</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold text-emerald-700">{totalToReceive.toLocaleString()}</p>
-                  <p className="text-[10px] text-emerald-600/70 font-medium">စုစုပေါင်း ကျပ်</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-rose-50 border-rose-100 shadow-none rounded-2xl">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-bold text-rose-700 uppercase tracking-wider">ပေးရန်ရှိ</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold text-rose-700">{totalToPay.toLocaleString()}</p>
-                  <p className="text-[10px] text-rose-600/70 font-medium">စုစုပေါင်း ကျပ်</p>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Debt List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               {debtsLoading ? (
-                 <div className="col-span-full text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
+                 <div className="text-center py-20"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-20" /></div>
               ) : debts && debts.length > 0 ? (
                 debts.map((debt) => (
                   <div
@@ -380,7 +348,7 @@ export default function AppMainPage() {
                     onClick={() => toggleDebtCompletion(debt.id, debt.completed)}
                     className={cn(
                       "group relative flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border transition-all cursor-pointer hover:ring-2 hover:ring-primary/20",
-                      debt.completed && "opacity-50"
+                      debt.completed && "opacity-50 grayscale"
                     )}
                   >
                     <div className="flex items-center gap-4">
@@ -399,7 +367,7 @@ export default function AppMainPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-right">
+                      <div className="text-right mr-2">
                         <p className={cn("font-bold text-lg leading-tight", debt.type === 'lent' ? "text-emerald-700" : "text-rose-700")}>
                           {debt.amount.toLocaleString()}
                         </p>
@@ -412,15 +380,15 @@ export default function AppMainPage() {
                           e.stopPropagation();
                           deleteDebt(debt.id);
                         }} 
-                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-muted-foreground hover:text-destructive transition-colors h-9 w-9"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20">
+                <div className="text-center py-20">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
                     <HandCoins className="h-8 w-8" />
                   </div>
