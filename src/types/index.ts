@@ -1,35 +1,23 @@
-export interface ListItem {
+
+export interface Student {
   id: string;
   name: string;
-  quantity: string;
-  description: string;
-  completed: boolean;
+  rollNumber: string;
   createdAt: number;
 }
 
-export interface List {
+export interface Attendance {
   id: string;
-  title: string;
-  category: string;
-  color: string;
-  items: ListItem[];
-  createdAt: number;
+  studentId: string;
+  day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+  weekStartDate: string;
+  present: boolean;
 }
 
-export interface Debt {
-  id: string;
-  personName: string;
-  amount: number;
-  type: 'owe' | 'lent'; // 'owe' = we owe them, 'lent' = they owe us
-  note: string;
-  date: number;
-  completed: boolean;
-}
-
-export const CATEGORIES = [
-  { name: 'Shopping', color: '#4560A1' },
-  { name: 'Travel', color: '#298BA3' },
-  { name: 'Work', color: '#3B5998' },
-  { name: 'Personal', color: '#556B2F' },
-  { name: 'Home', color: '#708090' },
-];
+export const DAYS = [
+  { key: 'mon', label: 'တနင်္လာ' },
+  { key: 'tue', label: 'အင်္ဂါ' },
+  { key: 'wed', label: 'ဗုဒ္ဓဟူး' },
+  { key: 'thu', label: 'ကြာသပတေး' },
+  { key: 'fri', label: 'သောကြာ' }
+] as const;

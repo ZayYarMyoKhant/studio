@@ -1,13 +1,12 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import { BottomNav } from '@/components/BottomNav';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'စာရင်း',
-  description: 'လွယ်ကူလျင်မြန်သော စာရင်းမှတ်တမ်း အက်ပ်',
+  title: 'Roll Call - ကျောင်းသားတက်ရောက်မှု',
+  description: 'ကျောင်းသားတက်ရောက်မှု မှတ်သားရန် အလွယ်ကူဆုံးဆော့ဖ်ဝဲ',
 };
 
 export default function RootLayout({
@@ -16,18 +15,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="my">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-background">
+      <body className="font-body antialiased bg-white">
         <FirebaseClientProvider>
-          <div className="pb-20 min-h-screen">
+          <div className="min-h-screen">
             {children}
           </div>
-          <BottomNav />
           <Toaster />
         </FirebaseClientProvider>
       </body>

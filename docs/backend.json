@@ -1,64 +1,43 @@
 
 {
   "entities": {
-    "ListItem": {
-      "title": "ListItem",
-      "description": "An item within a list.",
+    "Student": {
+      "title": "Student",
+      "description": "A student in a class.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "quantity": { "type": "string" },
-        "description": { "type": "string" },
-        "completed": { "type": "boolean" },
+        "rollNumber": { "type": "string" },
         "createdAt": { "type": "number" }
       },
-      "required": ["id", "name", "completed", "createdAt"]
+      "required": ["id", "name", "rollNumber"]
     },
-    "List": {
-      "title": "List",
-      "description": "A collection of items.",
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Attendance record for a student on a specific day.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "title": { "type": "string" },
-        "category": { "type": "string" },
-        "color": { "type": "string" },
-        "items": {
-          "type": "array",
-          "items": { "$ref": "#/entities/ListItem" }
-        },
-        "createdAt": { "type": "number" }
+        "studentId": { "type": "string" },
+        "day": { "type": "string", "enum": ["mon", "tue", "wed", "thu", "fri"] },
+        "weekStartDate": { "type": "string" },
+        "present": { "type": "boolean" }
       },
-      "required": ["id", "title", "category", "createdAt"]
-    },
-    "Debt": {
-      "title": "Debt",
-      "description": "A debt record (lent or owe).",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "personName": { "type": "string" },
-        "amount": { "type": "number" },
-        "type": { "type": "string", "enum": ["owe", "lent"] },
-        "note": { "type": "string" },
-        "date": { "type": "number" },
-        "completed": { "type": "boolean" }
-      },
-      "required": ["id", "personName", "amount", "type", "date", "completed"]
+      "required": ["id", "studentId", "day", "weekStartDate", "present"]
     }
   },
   "auth": {
     "providers": ["google.com"]
   },
   "firestore": {
-    "/users/{userId}/lists/{listId}": {
-      "schema": "List",
-      "description": "User's individual lists."
+    "/users/{userId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "List of students managed by the teacher."
     },
-    "/users/{userId}/debts/{debtId}": {
-      "schema": "Debt",
-      "description": "User's debt records."
+    "/users/{userId}/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "Daily attendance records."
     }
   }
 }
