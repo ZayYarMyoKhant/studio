@@ -1,8 +1,7 @@
-
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Trash2, UserPlus, Check, X, Loader2 } from "lucide-react"
+import { Plus, Trash2, UserPlus, Check, X, Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -34,7 +33,7 @@ export default function RollCallPage() {
   const db = useFirestore()
   const userId = user?.uid || "anonymous"
 
-  // Data fetching
+  // Data fetching from pre-configured Firebase collections
   const studentsRef = useMemo(() => collection(db, "users", userId, "students"), [db, userId])
   const studentsQuery = useMemo(() => query(studentsRef, orderBy("rollNumber", "asc")), [studentsRef])
   const { data: students, loading: studentsLoading } = useCollection<Student>(studentsQuery)
@@ -51,7 +50,7 @@ export default function RollCallPage() {
   const currentWeekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd')
 
   const handleAddStudent = () => {
-    if (!newStudentName || !newRollNumber) return
+    if (!newStudentName.trim() || !newRollNumber.trim()) return
     const id = Math.random().toString(36).substr(2, 9)
     const student: Student = {
       id,
@@ -112,62 +111,64 @@ export default function RollCallPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-primary/10">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary">Roll Call</h1>
-            <p className="text-sm text-muted-foreground">ကျောင်းသား တက်ရောက်မှုစာရင်း</p>
+            <h1 className="text-xl font-bold tracking-tight text-primary">Roll Call Software</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">ကျောင်းသား တက်ရောက်မှု ဒစ်ဂျစ်တယ် မှတ်တမ်းစာအုပ်</p>
           </div>
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20">
-                <UserPlus className="h-4 w-4 mr-2" /> ကျောင်းသားအသစ်ထည့်
+              <Button className="bg-primary hover:bg-primary/95 text-white font-medium rounded-xl shadow-sm border-0">
+                <UserPlus className="h-4 w-4 mr-2" /> ကျောင်းသားအသစ်ထည့်ရန်
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-2xl">
+            <DialogContent className="rounded-2xl max-w-sm">
               <DialogHeader>
-                <DialogTitle>ကျောင်းသား အချက်အလက်</DialogTitle>
+                <DialogTitle className="text-base font-bold text-slate-800">ကျောင်းသားအချက်အလက် ဖြည့်သွင်းရန်</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">နာမည်</label>
+              <div className="space-y-4 py-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">ကျောင်းသားနာမည်</label>
                   <Input
-                    placeholder="ကျောင်းသားအမည်"
+                    placeholder="အမည် ထည့်ပါ"
                     value={newStudentName}
                     onChange={(e) => setNewStudentName(e.target.value)}
+                    className="rounded-xl border-slate-200 focus-visible:ring-primary"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">ခုံနံပါတ်</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">ခုံနံပါတ် (Roll No.)</label>
                   <Input
-                    placeholder="Roll No."
+                    placeholder="ခုံနံပါတ် ထည့်ပါ"
                     value={newRollNumber}
                     onChange={(e) => setNewRollNumber(e.target.value)}
+                    className="rounded-xl border-slate-200 focus-visible:ring-primary"
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">မလုပ်တော့ပါ</Button>
-                <Button onClick={handleAddStudent} className="bg-primary rounded-xl px-8">သိမ်းမည်</Button>
+              <DialogFooter className="flex gap-2">
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl flex-1">မလုပ်တော့ပါ</Button>
+                <Button onClick={handleAddStudent} className="bg-primary rounded-xl flex-1 text-white">သိမ်းဆည်းမည်</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </header>
 
-      {/* Table Section */}
+      {/* Main Table Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-slate-50/70 border-b border-slate-100">
               <TableRow>
-                <TableHead className="w-[200px] font-bold">ကျောင်းသားနာမည်</TableHead>
-                <TableHead className="w-[100px] font-bold text-center">ခုံနံပါတ်</TableHead>
+                <TableHead className="w-[220px] font-bold text-slate-700 h-13 text-sm">ကျောင်းသားနာမည်</TableHead>
+                <TableHead className="w-[120px] font-bold text-slate-700 h-13 text-center text-sm">ခုံနံပါတ်</TableHead>
                 {DAYS.map(day => (
-                  <TableHead key={day.key} className="text-center font-bold">{day.label}</TableHead>
+                  <TableHead key={day.key} className="text-center font-bold text-slate-700 h-13 text-sm">{day.label}</TableHead>
                 ))}
                 <TableHead className="w-[60px]"></TableHead>
               </TableRow>
@@ -175,40 +176,41 @@ export default function RollCallPage() {
             <TableBody>
               {studentsLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-20">
+                  <TableCell colSpan={8} className="text-center py-24">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                    <p className="text-xs text-muted-foreground mt-2">ကျောင်းသားစာရင်းကို ရယူနေပါသည်...</p>
                   </TableCell>
                 </TableRow>
               ) : students && students.length > 0 ? (
                 students.map((student) => (
-                  <TableRow key={student.id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell className="text-center">{student.rollNumber}</TableCell>
+                  <TableRow key={student.id} className="hover:bg-slate-50/40 transition-colors border-b border-slate-100">
+                    <TableCell className="font-semibold text-slate-800 text-sm py-4">{student.name}</TableCell>
+                    <TableCell className="text-center font-medium text-slate-600 text-sm py-4">{student.rollNumber}</TableCell>
                     {DAYS.map(day => {
                       const recordId = `${currentWeekStart}_${student.id}_${day.key}`
                       const isPresent = attendanceData?.find(a => a.id === recordId)?.present
                       return (
-                        <TableCell key={day.key} className="text-center">
+                        <TableCell key={day.key} className="text-center py-3">
                           <button
                             onClick={() => toggleAttendance(student.id, day.key)}
                             className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center transition-all border-2",
+                              "w-9 h-9 rounded-xl flex items-center justify-center transition-all border-2 mx-auto",
                               isPresent 
-                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200" 
-                                : "bg-white border-slate-200 text-slate-300 hover:border-slate-300"
+                                ? "bg-emerald-500 border-emerald-500 text-white shadow-sm" 
+                                : "bg-white border-slate-200 text-slate-300 hover:border-slate-400"
                             )}
                           >
-                            {isPresent ? <Check className="h-6 w-6" /> : <X className="h-4 w-4 opacity-50" />}
+                            {isPresent ? <Check className="h-5 w-5 stroke-[3]" /> : <X className="h-3.5 w-3.5 opacity-40" />}
                           </button>
                         </TableCell>
                       )
                     })}
-                    <TableCell>
+                    <TableCell className="py-3 text-center">
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => deleteStudent(student.id)}
-                        className="text-slate-300 hover:text-rose-500 rounded-lg"
+                        className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl h-8 w-8"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -217,8 +219,11 @@ export default function RollCallPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
-                    ကျောင်းသားစာရင်း မရှိသေးပါ။ "ကျောင်းသားအသစ်ထည့်" ကိုနှိပ်ပါ။
+                  <TableCell colSpan={8} className="text-center py-24 text-slate-400 bg-white">
+                    <div className="max-w-xs mx-auto space-y-2">
+                      <p className="text-sm font-medium">ကျောင်းသားစာရင်း မရှိသေးပါ။</p>
+                      <p className="text-xs text-muted-foreground">အပေါ်ရှိ "ကျောင်းသားအသစ်ထည့်ရန်" ခလုတ်ကိုနှိပ်၍ စာရင်းစတင်ထည့်သွင်းနိုင်ပါသည်။</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -227,8 +232,12 @@ export default function RollCallPage() {
         </div>
       </main>
 
-      <footer className="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
-        <p>ယနေ့ရက်စွဲ: {format(new Date(), 'dd MMMM yyyy')}</p>
+      <footer className="max-w-6xl mx-auto px-4 py-8 text-center border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5 justify-center sm:justify-start">
+          <CalendarIcon className="h-3.5 w-3.5 text-slate-400" />
+          <span>ယနေ့ရက်စွဲ: {format(new Date(), 'dd MMMM yyyy')}</span>
+        </div>
+        <p>© ဒစ်ဂျစ်တယ် Roll Call စနစ် - စာအုပ်နှင့် ဘောပင် ကုန်ကျစရိတ်များကို သက်သာစေပါသည်။</p>
       </footer>
     </div>
   )
