@@ -1,43 +1,37 @@
 
 {
   "entities": {
-    "Student": {
-      "title": "Student",
-      "description": "A student in a class.",
+    "CalculationHistory": {
+      "title": "Calculation History",
+      "description": "Historical record of construction material calculations.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "rollNumber": { "type": "string" },
+        "userId": { "type": "string" },
+        "inputType": { "type": "string", "enum": ["area", "volume"] },
+        "inputValue": { "type": "number" },
+        "results": {
+          "type": "object",
+          "properties": {
+            "bricks": { "type": "number" },
+            "cementLbs": { "type": "number" },
+            "cementBags": { "type": "number" },
+            "sandCuft": { "type": "number" },
+            "sandKyin": { "type": "number" }
+          }
+        },
         "createdAt": { "type": "number" }
       },
-      "required": ["id", "name", "rollNumber"]
-    },
-    "Attendance": {
-      "title": "Attendance",
-      "description": "Attendance record for a student on a specific day.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "studentId": { "type": "string" },
-        "day": { "type": "string", "enum": ["mon", "tue", "wed", "thu", "fri"] },
-        "weekStartDate": { "type": "string" },
-        "present": { "type": "boolean" }
-      },
-      "required": ["id", "studentId", "day", "weekStartDate", "present"]
+      "required": ["id", "userId", "inputType", "inputValue", "results", "createdAt"]
     }
   },
   "auth": {
     "providers": ["google.com"]
   },
   "firestore": {
-    "/users/{userId}/students/{studentId}": {
-      "schema": "Student",
-      "description": "List of students managed by the teacher."
-    },
-    "/users/{userId}/attendance/{attendanceId}": {
-      "schema": "Attendance",
-      "description": "Daily attendance records."
+    "/users/{userId}/history/{historyId}": {
+      "schema": "CalculationHistory",
+      "description": "User's calculation history for quick reference."
     }
   }
 }
