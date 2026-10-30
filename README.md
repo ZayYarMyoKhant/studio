@@ -1,5 +1,18 @@
-# Firebase Studio
+# Bright-Net Construction Estimator
 
-This is a NextJS starter in Firebase Studio.
+Bright-Net သည် ဆောက်လုပ်ရေးလုပ်ငန်းခွင်များအတွက် အုတ်၊ ဘိလပ်မြေနှင့် သဲ လိုအပ်ချက်များကို အင်ဂျင်နီယာစံနှုန်းများအတိုင်း တိကျစွာ တွက်ချက်ပေးနိုင်သော Software တစ်ခုဖြစ်သည်။
 
-To get started, take a look at src/app/page.tsx.
+## Features
+- **Area Calculation**: စတုရန်းပေ (Sqft) အလိုက် တွက်ချက်ခြင်း။
+- **Volume Calculation**: ကုဗပေ (Cuft) အလိုက် တွက်ချက်ခြင်း။
+- **Real-time Conversion**: ဘိလပ်မြေအိတ်အရေအတွက်နှင့် သဲကျင်းပမာဏများကို တစ်ပါတည်း တွက်ချက်ပေးခြင်း။
+- **Calculation History**: လတ်တလော တွက်ချက်ထားသော မှတ်တမ်းများကို ပြန်လည်ကြည့်ရှုနိုင်ခြင်း။
+- **Dark Theme UI**: အသုံးပြုရလွယ်ကူသော Modern Dark Interface။
+
+## Deployment
+ဤ App ကို Vercel တွင် GitHub မှတစ်ဆင့် တိုက်ရိုက် Host လုပ်နိုင်ပြီး Telegram Mini App အဖြစ်လည်း အသုံးပြုနိုင်သည်။
+
+## How to use
+1. နံရံ၏ ဧရိယာ (သို့မဟုတ်) ထုထည်ကို ရွေးချယ်ပါ။
+2. အချက်အလက် ထည့်သွင်းပြီး "တွက်ချက်မည်" ကို နှိပ်ပါ။
+3. ရလဒ်များကို အုတ်၊ ဘိလပ်မြေ (ပေါင်/အိတ်)၊ သဲ (ကုဗပေ/ကျင်း) အလိုက် ကြည့်ရှုပါ။
