@@ -1,7 +1,8 @@
+
 "use client"
 
 import { useState, useMemo } from "react"
-import { Calculator, ArrowLeft, BrickWall, Droplets, Mountain, ClipboardList, Info, History as HistoryIcon, Trash2 } from "lucide-react"
+import { Calculator, ArrowLeft, BrickWall, Droplets, Mountain, ClipboardList, Info, History as HistoryIcon, Trash2, Banknote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -20,6 +21,11 @@ export default function BrightNetEstimator() {
   const [area, setArea] = useState<string>("")
   const [volume, setVolume] = useState<string>("")
   const [activeTab, setActiveTab] = useState<string>("area")
+  
+  // Cost states
+  const [brickUnitPrice, setBrickUnitPrice] = useState<string>("")
+  const [cementUnitPrice, setCementUnitPrice] = useState<string>("")
+  const [sandUnitPrice, setSandUnitPrice] = useState<string>("")
   
   const [results, setResults] = useState<{
     bricks: number;
@@ -96,7 +102,16 @@ export default function BrightNetEstimator() {
     setArea("")
     setVolume("")
     setResults(null)
+    setBrickUnitPrice("")
+    setCementUnitPrice("")
+    setSandUnitPrice("")
   }
+
+  // Cost calculations
+  const totalBrickCost = (results?.bricks || 0) * (parseFloat(brickUnitPrice) || 0)
+  const totalCementCost = (results?.cementBags || 0) * (parseFloat(cementUnitPrice) || 0)
+  const totalSandCost = (results?.sandKyin || 0) * (parseFloat(sandUnitPrice) || 0)
+  const grandTotal = totalBrickCost + totalCementCost + totalSandCost
 
   return (
     <div className="min-h-screen bg-black text-white pb-10">
@@ -220,7 +235,7 @@ export default function BrightNetEstimator() {
             )}
           </div>
         ) : (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
             <h2 className="text-lg font-bold text-blue-400 px-2 flex items-center justify-between">
               BRIGHT-NET RESULTS
               <span className="text-xs font-normal text-zinc-500 bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">
@@ -228,64 +243,147 @@ export default function BrightNetEstimator() {
               </span>
             </h2>
 
+            {/* Bricks Card */}
             <Card className="bg-zinc-950 border-blue-500/20 shadow-2xl rounded-2xl overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-5">
-                <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                  <BrickWall className="h-7 w-7" />
+              <CardContent className="p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+                    <BrickWall className="h-7 w-7" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">အုတ် (Bricks)</p>
+                    <p className="text-3xl font-black text-white tabular-nums">
+                      {Math.ceil(results?.bricks || 0).toLocaleString()} 
+                      <span className="text-base font-medium text-blue-500 ml-2">ချပ်</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">အုတ် (Bricks)</p>
-                  <p className="text-3xl font-black text-white tabular-nums">
-                    {Math.ceil(results?.bricks || 0).toLocaleString()} 
-                    <span className="text-base font-medium text-blue-500 ml-2">ချပ်</span>
-                  </p>
+                <div className="flex justify-end items-end gap-4 border-t border-zinc-800/50 pt-3">
+                  <div className="flex flex-col gap-1 items-end">
+                    <Label className="text-[10px] font-bold text-blue-500 uppercase">တစ်ချပ်စျေး</Label>
+                    <Input
+                      type="number"
+                      placeholder="စျေးနှုန်း"
+                      value={brickUnitPrice}
+                      onChange={(e) => setBrickUnitPrice(e.target.value)}
+                      className="w-24 h-8 bg-zinc-900 border-blue-500/30 text-xs text-white text-center rounded-lg"
+                    />
+                  </div>
+                  {totalBrickCost > 0 && (
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase">ကုန်ကျစရိတ်</p>
+                      <p className="text-sm font-bold text-blue-400">{Math.ceil(totalBrickCost).toLocaleString()} ကျပ်</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
+            {/* Cement Card */}
             <Card className="bg-zinc-950 border-blue-500/20 shadow-2xl rounded-2xl overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-5">
-                <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                  <Droplets className="h-7 w-7" />
+              <CardContent className="p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+                    <Droplets className="h-7 w-7" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ဘိလပ်မြေ (Cement)</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-black text-white tabular-nums">
+                        {results?.cementLbs.toFixed(1)} 
+                        <span className="text-base font-medium text-blue-500 ml-2">ပေါင်</span>
+                      </p>
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs font-bold text-blue-400/70">
+                        {results?.cementBags.toFixed(2)} အိတ် (Bags)
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ဘိလပ်မြေ (Cement)</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black text-white tabular-nums">
-                      {results?.cementLbs.toFixed(1)} 
-                      <span className="text-base font-medium text-blue-500 ml-2">ပေါင်</span>
-                    </p>
+                <div className="flex justify-end items-end gap-4 border-t border-zinc-800/50 pt-3">
+                  <div className="flex flex-col gap-1 items-end">
+                    <Label className="text-[10px] font-bold text-blue-500 uppercase">တစ်အိတ်စျေး</Label>
+                    <Input
+                      type="number"
+                      placeholder="စျေးနှုန်း"
+                      value={cementUnitPrice}
+                      onChange={(e) => setCementUnitPrice(e.target.value)}
+                      className="w-24 h-8 bg-zinc-900 border-blue-500/30 text-xs text-white text-center rounded-lg"
+                    />
                   </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full">
-                      {results?.cementBags.toFixed(2)} အိတ် (Bags)
-                    </span>
-                  </div>
+                  {totalCementCost > 0 && (
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase">ကုန်ကျစရိတ်</p>
+                      <p className="text-sm font-bold text-blue-400">{Math.ceil(totalCementCost).toLocaleString()} ကျပ်</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
+            {/* Sand Card */}
             <Card className="bg-zinc-950 border-blue-500/20 shadow-2xl rounded-2xl overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-5">
-                <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                  <Mountain className="h-7 w-7" />
+              <CardContent className="p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+                    <Mountain className="h-7 w-7" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">သဲ (Sand)</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-black text-white tabular-nums">
+                        {results?.sandCuft.toFixed(1)} 
+                        <span className="text-base font-medium text-blue-500 ml-2">ကုဗပေ</span>
+                      </p>
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs font-bold text-blue-400/70">
+                        {results?.sandKyin.toFixed(2)} ကျင်း (Kyin)
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">သဲ (Sand)</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black text-white tabular-nums">
-                      {results?.sandCuft.toFixed(1)} 
-                      <span className="text-base font-medium text-blue-500 ml-2">ကုဗပေ</span>
-                    </p>
+                <div className="flex justify-end items-end gap-4 border-t border-zinc-800/50 pt-3">
+                  <div className="flex flex-col gap-1 items-end">
+                    <Label className="text-[10px] font-bold text-blue-500 uppercase">တစ်ကျင်းစျေး</Label>
+                    <Input
+                      type="number"
+                      placeholder="စျေးနှုန်း"
+                      value={sandUnitPrice}
+                      onChange={(e) => setSandUnitPrice(e.target.value)}
+                      className="w-24 h-8 bg-zinc-900 border-blue-500/30 text-xs text-white text-center rounded-lg"
+                    />
                   </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full">
-                      {results?.sandKyin.toFixed(2)} ကျင်း (Kyin)
-                    </span>
-                  </div>
+                  {totalSandCost > 0 && (
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase">ကုန်ကျစရိတ်</p>
+                      <p className="text-sm font-bold text-blue-400">{Math.ceil(totalSandCost).toLocaleString()} ကျပ်</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Grand Total Cost Card */}
+            {grandTotal > 0 && (
+              <Card className="bg-blue-600 border-none shadow-[0_0_30px_rgba(37,99,235,0.4)] rounded-2xl overflow-hidden animate-in zoom-in duration-300">
+                <CardContent className="p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white">
+                      <Banknote className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">စုစုပေါင်း ခန့်မှန်းကုန်ကျစရိတ်</p>
+                      <p className="text-2xl font-black text-white tabular-nums">
+                        {Math.ceil(grandTotal).toLocaleString()}
+                        <span className="text-xs font-bold ml-1 opacity-80">ကျပ်</span>
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Button 
               variant="outline"
